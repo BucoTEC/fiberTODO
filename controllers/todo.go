@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"fmt"     // new
-	"strconv" // new
+	"fmt"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -36,7 +36,7 @@ func GetTodos(c *fiber.Ctx) error {
     })
 }
 
-// add todo
+// Create a todo
 func CreateTodo(c *fiber.Ctx) error {
     type Request struct {
         Title string `json:"title"`
@@ -73,7 +73,8 @@ func CreateTodo(c *fiber.Ctx) error {
     })
 }
 
-//get singel todo
+// get a single todo
+// PARAM: id
 func GetTodo(c *fiber.Ctx) error {
     // get parameter value
     paramId := c.Params("id")
@@ -102,6 +103,108 @@ func GetTodo(c *fiber.Ctx) error {
     }
 
     // if todo not available
+    return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+        "success": false,
+        "message": "Todo not found",
+    })
+}
+
+// Update a todo
+// PARAM: id
+func UpdateTodo(c *fiber.Ctx) error {
+    // find parameter
+    paramId := c.Params("id")
+
+    // convert parameter string to int
+    id, err := strconv.Atoi(paramId)
+
+    // if parameter cannot parse
+    if err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "success": false,
+            "message": "Cannot parse id",
+        })
+    }
+
+    // request structure
+    type Request struct {
+        Title     *string `json:"title"`
+        Completed *bool   `json:"completed"`
+    }
+
+    var body Request
+    err = c.BodyParser(&body)
+
+    if err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "success": false,
+            "message": "Cannot parse JSON",
+        })
+    }
+
+    var todo *Todo
+
+    for _, t := range todos {
+        if t.Id == id {
+            todo = t
+            break
+        }
+    }
+
+    if todo.Id == 0 {
+        return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+            "success":  false,
+            "message": "Not found",
+        })
+    }
+
+    if body.Title != nil {
+        todo.Title = *body.Title
+    }
+
+    if body.Completed != nil {
+        todo.Completed = *body.Completed
+    }
+
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "success": true,
+        "data": fiber.Map{
+            "todo": todo,
+        },
+    })
+}
+
+// Delete a todo
+// PARAM: id
+func DeleteTodo(c *fiber.Ctx) error {
+    // get param
+    paramId := c.Params("id")
+
+    // convert param string to int
+    id, err := strconv.Atoi(paramId)
+
+    // if parameter cannot parse
+    if err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "success": false,
+            "message": "Cannot parse id",
+        })
+    }
+
+    // find and delete todo
+    for i, todo := range todos {
+        if todo.Id == id {
+
+            todos = append(todos[:i], todos[i+1:]...)
+
+            return c.Status(fiber.StatusNoContent).JSON(fiber.Map{
+                "success":  true,
+                "message": "Deleted Succesfully",
+            })
+        }
+    }
+
+    // if todo not found
     return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
         "success": false,
         "message": "Todo not found",
