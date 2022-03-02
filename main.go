@@ -8,15 +8,27 @@ import (
 
 //handler for routing
 func setupRoutes(app *fiber.App) {
-	app.Get("/", func(c *fiber.Ctx) error {
+	// give response when at /
+    app.Get("/", func(c *fiber.Ctx) error {
         return c.Status(fiber.StatusOK).JSON(fiber.Map{
             "success":  true,
             "message": "You are at the endpoint 😉",
         })
     })
 
-	api := app.Group("/api")
-	routes.TodoRoute(api.Group("/todos"))
+    // api group
+    api := app.Group("/api")
+
+    // give response when at /api
+    api.Get("", func(c *fiber.Ctx) error {
+        return c.Status(fiber.StatusOK).JSON(fiber.Map{
+            "success": true,
+            "message": "You are at the api endpoint 😉",
+        })
+    })
+
+    // connect todo routes
+    routes.TodoRoute(api.Group("/todos"))
 }
 
 func main(){
