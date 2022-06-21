@@ -1,7 +1,26 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/gofiber/fiber/v2"
+)
 
 func main(){
-	fmt.Println("hello from fiber")
+	app := fiber.New()
+
+	app.Get("/", func (c *fiber.Ctx) error  {
+		return c.JSON("hello dera frined")
+	})
+
+	app.Get("/:name", func (c *fiber.Ctx) error  {
+		name := c.Params("name")
+		msg := fmt.Sprintf("hello dera frined %v", name)
+		return c.JSON(msg)
+	})
+
+	 app.Listen(":5000") 
+
+
+	
 }
